@@ -48,6 +48,34 @@ function draw() {
           noStroke();
           circle(keypoint.x, keypoint.y, 16);
         }
+
+        // Draw lines connecting keypoints for specific ranges
+        stroke(0); // Set line color to black
+        strokeWeight(2); // Set line thickness
+
+        // Connect keypoints 0 to 4
+        for (let i = 0; i < 4; i++) {
+          line(
+            hand.keypoints[i].x, hand.keypoints[i].y,
+            hand.keypoints[i + 1].x, hand.keypoints[i + 1].y
+          );
+        }
+
+        // Connect keypoints 5 to 8
+        for (let i = 5; i < 8; i++) {
+          line(
+            hand.keypoints[i].x, hand.keypoints[i].y,
+            hand.keypoints[i + 1].x, hand.keypoints[i + 1].y
+          );
+        }
+
+        // Connect keypoints 9 to 12
+        for (let i = 9; i < 12; i++) {
+          line(
+            hand.keypoints[i].x, hand.keypoints[i].y,
+            hand.keypoints[i + 1].x, hand.keypoints[i + 1].y
+          );
+        }
       }
     }
   }
