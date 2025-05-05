@@ -5,6 +5,13 @@ let video;
 let handPose;
 let hands = [];
 
+let circleX = 320; // 圓的初始 X 座標
+let circleY = 240; // 圓的初始 Y 座標
+const circleRadius = 50; // 圓的半徑
+
+let isDragging = false; // 判斷是否正在拖曳圓
+let trail = []; // 儲存圓的軌跡
+
 function preload() {
   // Initialize HandPose model with flipped video input
   handPose = ml5.handPose({ flipped: true });
@@ -30,53 +37,50 @@ function setup() {
 function draw() {
   image(video, 0, 0);
 
-  // Ensure at least one hand is detected
+  // 繪製軌跡
+  noFill();
+  stroke(0, 0, 255); // 藍色
+  strokeWeight(2);
+  beginShape();
+  for (let pos of trail) {
+    vertex(pos.x, pos.y);
+  }
+  endShape();
+
+  // 繪製圓
+  fill(0, 255, 0); // 綠色
+  noStroke();
+  circle(circleX, circleY, circleRadius * 2);
+
+  // 確保至少檢測到一隻手
   if (hands.length > 0) {
+    let isTouching = false;
+
     for (let hand of hands) {
       if (hand.confidence > 0.1) {
-        // Loop through keypoints and draw circles
-        for (let i = 0; i < hand.keypoints.length; i++) {
-          let keypoint = hand.keypoints[i];
+        // 檢查食指 (keypoints[8]) 是否接觸到圓
+        let indexFinger = hand.keypoints[8];
+        let distance = dist(indexFinger.x, indexFinger.y, circleX, circleY);
 
-          // Color-code based on left or right hand
-          if (hand.handedness == "Left") {
-            fill(255, 0, 255);
-          } else {
-            fill(255, 255, 0);
-          }
+        if (distance < circleRadius) {
+          // 如果接觸到，讓圓的位置跟隨食指移動
+          circleX = indexFinger.x;
+          circleY = indexFinger.y;
 
-          noStroke();
-          circle(keypoint.x, keypoint.y, 16);
-        }
+          // 新增圓的位置到軌跡
+          trail.push({ x: circleX, y: circleY });
 
-        // Draw lines connecting keypoints for specific ranges
-        stroke(0); // Set line color to black
-        strokeWeight(2); // Set line thickness
-
-        // Connect keypoints 0 to 4
-        for (let i = 0; i < 4; i++) {
-          line(
-            hand.keypoints[i].x, hand.keypoints[i].y,
-            hand.keypoints[i + 1].x, hand.keypoints[i + 1].y
-          );
-        }
-
-        // Connect keypoints 5 to 8
-        for (let i = 5; i < 8; i++) {
-          line(
-            hand.keypoints[i].x, hand.keypoints[i].y,
-            hand.keypoints[i + 1].x, hand.keypoints[i + 1].y
-          );
-        }
-
-        // Connect keypoints 9 to 12
-        for (let i = 9; i < 12; i++) {
-          line(
-            hand.keypoints[i].x, hand.keypoints[i].y,
-            hand.keypoints[i + 1].x, hand.keypoints[i + 1].y
-          );
+          isTouching = true;
         }
       }
     }
+
+    // 更新拖曳狀態
+    isDragging = isTouching;
+  }
+
+  // 如果手指離開圓，停止新增軌跡
+  if (!isDragging && trail.length > 0) {
+    trail = trail.slice(0); // 保留現有軌跡
   }
 }
